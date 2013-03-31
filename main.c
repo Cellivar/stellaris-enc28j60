@@ -1,11 +1,5 @@
-#include <inc/hw_ints.h>
-#include <stdint.h>
 #include "common.h"
-#include "spi.h"
 #include <driverlib/systick.h>
-#include <driverlib/interrupt.h>
-#include <uip/uip.h>
-#include <uip/uip_arp.h>
 #include "utils/uartstdio.c"
 
 #include "enc28j60.h"
