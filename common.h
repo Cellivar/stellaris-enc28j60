@@ -22,6 +22,6 @@
 #include <uip/uip.h>
 #include <uip/uip_arp.h>
 
-#define printf          UARTprintf
+#define printf		UARTprintf
 
 #endif //ENC28J60_STELLARIS_CHAPMAN_COMMON_H_
