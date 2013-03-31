@@ -26,22 +26,40 @@ void uip_log(char *msg) {
 
 
 
-// Presumably unique MAC for a defunct tech company from Denmark.
-// If this gets a collision, go to Vegas.
+/**
+ * Various config options are present here
+ *
+ * MAC address of interface. Presumably unique, from a defunct Denmark tech
+ * company.
+ */
 const uint8_t mac_addr[] = { 0x00, 0xC0, 0x033, 0x38, 0x22, 0xA4 };
+/**
+ * Uncomment this first line for a static IP. Leave it for DHCP. Don't touch
+ * the second line.
+ */
+//#define STATIC_IP
+
+#ifdef STATIC_IP
+/**
+ * Default IP address of gateway
+ */
+#define DEFAULT_IPADDR0 10
+#define DEFAULT_IPADDR1 0
+#define DEFAULT_IPADDR2 0
+#define DEFAULT_IPADDR3 201
+/**
+ * Default netmask
+ */
+#define DEFAULT_NETMASK0 255
+#define DEFAULT_NETMASK1 255
+#define DEFAULT_NETMASK2 255
+#define DEFAULT_NETMASK3 0
+
+#endif
 
 
-static void enc28j60_reset(void) {
-	// Reset the chip via pin E5
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-	ROM_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_OD);
-	MAP_GPIODirModeSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
 
-	MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_5, 0);
-	MAP_SysCtlDelay(1000);
-	MAP_GPIODirModeSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_DIR_MODE_IN);
-	MAP_SysCtlDelay(1000);
-}
+
 
 static void cpu_init(void) {
 	// A safety loop in order to interrupt the MCU before setting the clock (wrongly)
@@ -60,8 +78,6 @@ static void uart_init(void) {
 	MAP_GPIOPinConfigure(GPIO_PA0_U0RX);
 	MAP_GPIOPinConfigure(GPIO_PA1_U0TX);
 	MAP_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-	/*UARTConfigSetExpClk(UART1_BASE, SysCtlClockGet(), 115200,
-	UART_CONFIG_WLEN_8| UART_CONFIG_STOP_ONE| UART_CONFIG_PAR_NONE);*/
 	UARTStdioInitExpClk(0, 115200);
 }
 
@@ -77,7 +93,7 @@ int main(void) {
 	// One line config! Woo!
 	static ENCJ_STELLARIS::ENC28J60 chip(mac_addr);
 
-	printf("enc28j60 online\n");
+	printf("ENC28J60 online\n");
 
 	//
 	// Configure SysTick for a periodic interrupt.
@@ -88,45 +104,50 @@ int main(void) {
 
 	uip_init();
 
-	eth_addr.addr[0] = mac_addr[0];
-	eth_addr.addr[1] = mac_addr[1];
-	eth_addr.addr[2] = mac_addr[2];
-	eth_addr.addr[3] = mac_addr[3];
-	eth_addr.addr[4] = mac_addr[4];
-	eth_addr.addr[5] = mac_addr[5];
-
+	// Dump MAC into uIP
+	for (int i = 0; i < 6; ++i)
+	{
+		eth_addr.addr[i] = mac_addr[i];
+	}
 	uip_setethaddr(eth_addr);
 
-#define DEFAULT_IPADDR0 10
-#define DEFAULT_IPADDR1 0
-#define DEFAULT_IPADDR2 0
-#define DEFAULT_IPADDR3 201
-
-#define DEFAULT_NETMASK0 255
-#define DEFAULT_NETMASK1 255
-#define DEFAULT_NETMASK2 255
-#define DEFAULT_NETMASK3 0
-
-#undef STATIC_IP
 
 #ifdef STATIC_IP
-
-	uip_ipaddr(ipaddr, DEFAULT_IPADDR0, DEFAULT_IPADDR1, DEFAULT_IPADDR2,
-		DEFAULT_IPADDR3);
+	// Static IP
+	uip_ipaddr
+		( ipaddr
+		, DEFAULT_IPADDR0
+		, DEFAULT_IPADDR1
+		, DEFAULT_IPADDR2
+		, DEFAULT_IPADDR3
+		);
 	uip_sethostaddr(ipaddr);
+
+	// Static Netmask
+	uip_ipaddr
+		( ipaddr
+		, DEFAULT_NETMASK0
+		, DEFAULT_NETMASK1
+		, DEFAULT_NETMASK2
+		, DEFAULT_NETMASK3
+		);
+	uip_setnetmask(ipaddr);
+
+#ifdef _DEBUG
 	printf("IP: %d.%d.%d.%d\n", DEFAULT_IPADDR0, DEFAULT_IPADDR1,
 		DEFAULT_IPADDR2, DEFAULT_IPADDR3);
-	uip_ipaddr(ipaddr, DEFAULT_NETMASK0, DEFAULT_NETMASK1, DEFAULT_NETMASK2,
-		DEFAULT_NETMASK3);
-	uip_setnetmask(ipaddr);
+#endif
 
 #else
-
+	// DHCP
 	uip_ipaddr(ipaddr, 0, 0, 0, 0);
 	uip_sethostaddr(ipaddr);
-	printf("Waiting for IP address...\n");
 	uip_ipaddr(ipaddr, 0, 0, 0, 0);
 	uip_setnetmask(ipaddr);
+
+//#ifdef _DEBUG
+	printf("Waiting for IP address...\n");
+//#endif
 
 #endif
 
@@ -134,10 +155,27 @@ int main(void) {
 
 #ifndef STATIC_IP
 
+	// DHCP request
 	dhcpc_init(mac_addr, 6);
 	dhcpc_request();
 
 #endif
+
+
+
+
+
+
+
+	// TODO
+
+
+
+
+
+
+
+
 
 	long lPeriodicTimer, lARPTimer;
 	lPeriodicTimer = lARPTimer = 0;

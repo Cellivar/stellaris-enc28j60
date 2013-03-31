@@ -279,6 +279,10 @@ namespace ENCJ_STELLARIS
 		MAP_MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
+	/**
+	 * Enable the processor interrupt for the INT pin
+	 *
+	 */
 	void ENC28J60::InitInterrupt
 		( uint8_t INTport
 		, uint8_t INTpin
