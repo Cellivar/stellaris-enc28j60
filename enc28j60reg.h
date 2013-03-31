@@ -1,5 +1,15 @@
-#ifndef _ENC28J60_REG_H
-#define _ENC28J60_REG_H
+/**
+ * @file enc28j60reg.h
+ *
+ * Common register access information, including register locations and 
+ * accessor defines
+ * 
+ * Originally (painfully) written by http://github.com/xpgdk
+ */
+
+
+#ifndef _ENC28J60_STELLARIS_REG_H
+#define _ENC28J60_STELLARIS_REG_H
 
 #define ANY_BANK 4
 #define ENC_BANK(REG)		REG ## _BANK
