@@ -23,8 +23,6 @@
 namespace ENCJ_STELLARIS
 {
 
-
-
 	/**
 	 * ENC28J60 Class
 	 */
@@ -74,7 +72,7 @@ namespace ENCJ_STELLARIS
 		bool Send(const uint8_t *buf, uint16_t count);
 		void Reset();
 
-		uint8_t SPIsend(uint8_t msg);
+		uint8_t SPISend(uint8_t msg);
 
 	private:
 		/* Setup */

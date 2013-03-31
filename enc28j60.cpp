@@ -192,7 +192,7 @@ namespace ENCJ_STELLARIS
 	 * Enable the SSI connection for SPI to the ENC chip
 	 *
 	 * @param SSIbase is the only value we care about after this initialization
-	 *  and as such it is stored in the object for later use in the SPIsend
+	 *  and as such it is stored in the object for later use in the SPISend
 	 *  function.
 	 */
 	void ENC28J60::InitSPI
@@ -442,7 +442,7 @@ namespace ENCJ_STELLARIS
 
 
 	// Send SPI request and read return value
-	uint8_t ENC28J60::SPIsend(uint8_t msg)
+	uint8_t ENC28J60::SPISend(uint8_t msg)
 	{
 		unsigned long val;
 		MAP_SSIDataPut(this->SSIbase, msg);
