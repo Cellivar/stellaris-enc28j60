@@ -24,8 +24,5 @@
 #define BUF	((struct uip_eth_hdr *)uip_buf)
 
 #define HW_SSI
-static __inline__ void delayMs(unsigned int delay) {
-	MAP_SysCtlDelay(delay*16666);
-}
 
 #endif
