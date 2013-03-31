@@ -36,24 +36,25 @@ namespace ENCJ_STELLARIS
 		 * Blank arguments default to XPG's boosterpack pinout.
 		 */
 		ENC28J60
-		( const uint8_t *mac
-		, uint8_t CSport
-		, uint8_t CSpin
-		, uint8_t CSperiph
-		, uint8_t INTport
-		, uint8_t INTpin
-		, uint8_t INTperiph
-		, uint8_t RESETport
-		, uint8_t RESETpin
-		, uint8_t RESETperiph
-		, uint8_t SSIBase
-		, uint8_t SSIperiph
-		, uint8_t SSIGPIOperiph
-		, uint8_t SSIGPIOport
-		, uint8_t SSIGPIOpins
-		, uint8_t SSICLK
-		, uint8_t SSIRX
-		, uint8_t SSITX
+		( const uint8_t *mac					// MAC address array
+		, uint8_t CSport		= 0x40005000	// PORT B
+		, uint8_t CSpin			= 0x00000020	// PIN 5
+		, uint8_t CSperiph		= 0x20000002	// GPIO B
+		, uint8_t INTport		= 0x40024000	// PORT E
+		, uint8_t INTpin		= 0x00000010	// PIN 4
+		, uint8_t INTperiph		= 0x20000010	// GPIO E
+		, uint8_t INTassign		= 20			// INT_GPIOE
+		, uint8_t RESETport		= 0x40004000	// PORT A
+		, uint8_t RESETpin		= 0x00000004	// PIN 2
+		, uint8_t RESETperiph	= 0x20000001	// GPIO A
+		, uint8_t SSIbase		= 0x4000A000	// SSI2 Base
+		, uint8_t SSIperiph		= 0xf0001c02	// SSI2 Peripherial
+		, uint8_t SSIGPIOperiph	= 0x20000002	// PERIPH_GPIOB
+		, uint8_t SSIGPIOport	= 0x40005000	// GPIO_PORTB_BASE
+		, uint8_t SSIGPIOpins	= 0x00000104	// Pins 4 | 6 | 7
+		, uint8_t SSIclk		= 0x00011002	// GPIO_PB4_SSI2CLK
+		, uint8_t SSIrx			= 0x00011802	// GPIO_PB6_SSI2RX
+		, uint8_t SSItx			= 0x00011C02	// GPIO_PB7_SSI2TX
 		);
 
 #ifdef STELLARIS_PINS_SSIPIN_CHAPMAN_H && STELLARIS_PINS_DIGITALIOPIN_CHAPMAN_H
@@ -100,6 +101,12 @@ namespace ENCJ_STELLARIS
 			);
 
 		void InitConfig();
+
+		void InitInterrupt
+			( uint8_t INTport
+			, uint8_t INTpin
+			, uint8_t INTassign
+			);
 
 
 		/* Pin bank */
