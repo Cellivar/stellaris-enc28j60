@@ -1,13 +1,14 @@
 #include <inc/hw_ints.h>
 #include <stdint.h>
 #include "common.h"
-#include "enc28j60.h"
 #include "spi.h"
 #include <driverlib/systick.h>
 #include <driverlib/interrupt.h>
 #include <uip/uip.h>
 #include <uip/uip_arp.h>
 #include "utils/uartstdio.c"
+
+#include "enc28j60.h"
 
 static volatile unsigned long g_ulFlags;
 
@@ -41,6 +42,7 @@ static void enc28j60_reset(void) {
 	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 	ROM_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_OD);
 	MAP_GPIODirModeSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
+
 	MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_5, 0);
 	MAP_SysCtlDelay(1000);
 	MAP_GPIODirModeSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_DIR_MODE_IN);
@@ -69,38 +71,6 @@ static void uart_init(void) {
 	UARTStdioInitExpClk(0, 115200);
 }
 
-static void spi_init(void) {
-
-	// Configure SSI2 for SPI RAM usage
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI3);
-	MAP_GPIOPinConfigure(GPIO_PD0_SSI3CLK);
-	MAP_GPIOPinConfigure(GPIO_PD2_SSI3RX);
-	MAP_GPIOPinConfigure(GPIO_PD3_SSI3TX);
-	MAP_GPIOPinTypeSSI(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2 | GPIO_PIN_3);
-	MAP_SSIConfigSetExpClk(SSI3_BASE, MAP_SysCtlClockGet(), SSI_FRF_MOTO_MODE_0,
-		SSI_MODE_MASTER, 1000000, 8);
-	MAP_SSIEnable(SSI3_BASE);
-
-	unsigned long b;
-	while(MAP_SSIDataGetNonBlocking(SSI3_BASE, &b)) {}
-}
-
-static void enc28j60_comm_init(void) {
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, ENC_CS);
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, SRAM_CS);
-	//  MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, ENC_CS | ENC_RESET | SRAM_CS);
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, ENC_INT);
-
-	//  MAP_GPIOPinWrite(GPIO_PORTA_BASE, ENC_RESET, 0);
-	MAP_GPIOPinWrite(ENC_CS_PORT, ENC_CS, ENC_CS);
-	MAP_GPIOPinWrite(GPIO_PORTA_BASE, SRAM_CS, SRAM_CS);
-}
-
-
 
 int main(void) {
 	static struct uip_eth_addr eth_addr;
@@ -110,32 +80,17 @@ int main(void) {
 	uart_init();
 	printf("Welcome\n");
 
-	enc28j60_reset();
-	spi_init();
-	enc28j60_comm_init();
+	// One line config! Woo!
+	static ENCJ_STELLARIS::ENC28J60 chip(mac_addr);
 
 	printf("enc28j60 online\n");
-
-	enc_init(mac_addr);
 
 	//
 	// Configure SysTick for a periodic interrupt.
 	//
 	MAP_SysTickPeriodSet(MAP_SysCtlClockGet() / SYSTICKHZ);
 	MAP_SysTickEnable();
-	MAP_SysTickIntEnable();
-
-	//MAP_IntEnable(INT_GPIOA);
-	MAP_IntEnable(INT_GPIOE);
-	MAP_IntMasterEnable();
-
-	MAP_SysCtlPeripheralClockGating(false);
-
-	printf("int enabled\n");
-
-	MAP_GPIOIntTypeSet(GPIO_PORTE_BASE, ENC_INT, GPIO_FALLING_EDGE);
-	MAP_GPIOPinIntClear(GPIO_PORTE_BASE, ENC_INT);
-	MAP_GPIOPinIntEnable(GPIO_PORTE_BASE, ENC_INT);
+	MAP_SysTickIntEnable();	
 
 	uip_init();
 
@@ -254,13 +209,6 @@ int main(void) {
 	return 0;
 }
 
-uint8_t spi_send(uint8_t c) {
-	unsigned long val;
-	MAP_SSIDataPut(SSI3_BASE, c);
-	MAP_SSIDataGet(SSI3_BASE, &val);
-	return (uint8_t)val;
-}
-
 
 void dhcpc_configured(const struct dhcpc_state *s)
 {
@@ -285,10 +233,6 @@ void SysTickIntHandler(void)
 	//g_ulFlags |= FLAG_SYSTICK;
 }
 
-clock_time_t clock_time(void)
-{
-	return((clock_time_t)g_ulTickCounter);
-}
 
 void GPIOPortEIntHandler(void) {
 	uint8_t p = MAP_GPIOPinIntStatus(GPIO_PORTE_BASE, true) & 0xFF;
@@ -296,4 +240,10 @@ void GPIOPortEIntHandler(void) {
 	MAP_GPIOPinIntClear(GPIO_PORTE_BASE, p);
 
 	HWREGBITW(&g_ulFlags, FLAG_ENC_INT) = 1;
+}
+
+// Not referenced anywhere? 
+clock_time_t clock_time(void)
+{
+	return((clock_time_t)g_ulTickCounter);
 }

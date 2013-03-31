@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdint.h>
+
 #include <inc/hw_types.h>
 #include <inc/hw_memmap.h>
 #include <driverlib/rom.h>
@@ -18,11 +20,5 @@
 #include <uip/uip_arp.h>
 
 #define printf          UARTprintf
-
-#define SRAM_CS		GPIO_PIN_5
-
-#define BUF	((struct uip_eth_hdr *)uip_buf)
-
-#define HW_SSI
 
 #endif

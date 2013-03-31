@@ -276,7 +276,7 @@ namespace ENCJ_STELLARIS
 		this->RESETport = RESETport;
 
 		// Bring CS high
-		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
+		MAP_MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	void ENC28J60::InitInterrupt
@@ -336,7 +336,7 @@ namespace ENCJ_STELLARIS
 		// Update next packet pointer
 		this->nextPacket = header[0] | (header[1] << 8);
 
-		// TODO
+		// TODO: figure out what this does and comment as such
 		uint16_t dataCount = status[0] | (status[1] << 8);
 
 		if (status[2] & (1 << 7))
@@ -459,11 +459,11 @@ namespace ENCJ_STELLARIS
 	 */
 	void ENC28J60::Reset()
 	{
-		GPIOPinWrite(this->resetPort, this->resetPin, 0);
+		MAP_GPIOPinWrite(this->resetPort, this->resetPin, 0);
 
 		this->SPISend(0xFF);
 
-		GPIOPinWrite(this->resetPort, this->resetPin, this->resetPin);
+		MAP_GPIOPinWrite(this->resetPort, this->resetPin, this->resetPin);
 	}
 
 
@@ -482,11 +482,11 @@ namespace ENCJ_STELLARIS
 	// Read Control Register 
 	uint8_t ENC28J60::RCR(uint8_t reg)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(reg);
 		uint8_t b = SPISend(0xFF);
 
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 		return b;
 	}
 
@@ -498,11 +498,11 @@ namespace ENCJ_STELLARIS
 	 */
 	uint8_t ENC28J60::RCRM(uint8_t reg)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(reg);
 		this->SPISend(0xFF);
 		uint8_t b = this->SPISend(0xFF);
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 
 		return b;
 	}
@@ -510,36 +510,36 @@ namespace ENCJ_STELLARIS
 	// Write Control Register
 	void ENC28J60::WCR(uint8_t reg, uint8_t val)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(0x40 | reg);
 		this->SPISend(val);
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 	}
 
 	// Read Buffer Memory
 	void ENC28J60::RBM(uint8_t *buf, uint8_t len)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(0x20 | 0x1A);
 		for (int i = 0; i < len; ++i)
 		{
 			*buf = this->SPISend(0xFF);
 			++buf;
 		}
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 	}
 
 	// Write Buffer Memory
 	void ENC28J60::WBM(const uint8_t *buf, uint8_t len)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(0x60 | 0x1A);
 		for (int i = 0; i < len; ++i)
 		{
 			this->SPISend(*buff);
 			++buf;
 		}
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 	}
 
 	/**
@@ -549,19 +549,19 @@ namespace ENCJ_STELLARIS
 	 */
 	void ENC28J60::BFS(uint8_t reg, uint8_t mask)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(0x80 | reg);
 		this->SPISend(mask);
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 	}
 
 	// Bit Field Clear
 	void ENC28J60::BFC(uint8_t reg, uint8_t mask)
 	{
-		GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
 		this->SPISend(0xA0 | reg);
 		this->SPISend(mask);
-		GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
 	}
 
 

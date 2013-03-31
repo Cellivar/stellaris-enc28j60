@@ -11,13 +11,9 @@
 #ifndef ENC28J60_STELLARIS_CHAPMAN_H_
 #define ENC28J60_STELLARIS_CHAPMAN_H_
 
-
-#include <stdint.h>
+//TODO: Remove "common.h" requirement? Maybe?
+#include "common.h"
 #include "enc28j60reg.h"
-
-
-//TODO: Remove "common.h" requirement
-#include <common.h>
 
 
 namespace ENCJ_STELLARIS
