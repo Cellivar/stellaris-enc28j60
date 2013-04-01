@@ -1,4 +1,5 @@
-﻿/**
+﻿// derp
+/**
  * @file enc28j60.cpp
  * 
  * Definitions for the ENC28J60 class
@@ -12,14 +13,18 @@
  * They simply pass the register's bank as an argument, so the caller
  * doesn't have to deal with that.
  */
-#define READ_REG(reg) enc_read_reg(reg, reg ## _BANK)
-#define WRITE_REG(reg, value) enc_write_reg(reg, reg ## _BANK, value)
-#define READ_MREG(reg) enc_read_mreg(reg, reg ## _BANK)
-#define SET_REG_BITS(reg, mask) enc_set_bits(reg, reg ## _BANK, mask)
-#define CLEAR_REG_BITS(reg, mask) enc_clear_bits(reg, reg ## _BANK, mask)
+#define READ_REG(reg) this->ReadRegister(reg, reg ## _BANK)
+#define WRITE_REG(reg, value) this->WriteRegister(reg, reg ## _BANK, value)
+#define READ_MREG(reg) this->ReadMIIRegister(reg, reg ## _BANK)
+#define SET_REG_BITS(reg, mask) this->BitsFieldSet(reg, reg ## _BANK, mask)
+#define CLEAR_REG_BITS(reg, mask) this->BitsFieldClear(reg, reg ## _BANK, mask)
 
 // uIP library's buffer
 #define BUF	((struct uip_eth_hdr *)uip_buf)
+
+// Beginning/end of the TX/RX space
+#define TX_START (0x1FFF - 0x600)
+#define RX_END (TX_START-1)
 
 
 namespace ENCJ_STELLARIS
@@ -27,24 +32,24 @@ namespace ENCJ_STELLARIS
 	
 	ENC28J60::ENC28J60
 		( const uint8_t *mac
-		, uint8_t CSport
-		, uint8_t CSpin
-		, uint8_t CSperiph
-		, uint8_t INTport
-		, uint8_t INTpin
-		, uint8_t INTperiph
-		, uint8_t INTassign
-		, uint8_t RESETport
-		, uint8_t RESETpin
-		, uint8_t RESETperiph
-		, uint8_t SSIBase
-		, uint8_t SSIperiph
-		, uint8_t SSIGPIOperiph
-		, uint8_t SSIGPIOport
-		, uint8_t SSIGPIOpins
-		, uint8_t SSICLK
-		, uint8_t SSIRX
-		, uint8_t SSITX
+		, uint32_t CSport
+		, uint32_t CSpin
+		, uint32_t CSperiph
+		, uint32_t INTport
+		, uint32_t INTpin
+		, uint32_t INTperiph
+		, uint32_t INTassign
+		, uint32_t RESETport
+		, uint32_t RESETpin
+		, uint32_t RESETperiph
+		, uint32_t SSIbase
+		, uint32_t SSIperiph
+		, uint32_t SSIGPIOperiph
+		, uint32_t SSIGPIOport
+		, uint32_t SSIGPIOpins
+		, uint32_t SSICLK
+		, uint32_t SSIRX
+		, uint32_t SSITX
 		)
 	{
 		this->InitSPI
@@ -70,7 +75,7 @@ namespace ENCJ_STELLARIS
 			, RESETperiph
 			);
 
-		this->InitConfig();
+		this->InitConfig(mac);
 
 		this->InitInterrupt
 			( INTport
@@ -84,7 +89,7 @@ namespace ENCJ_STELLARIS
 	/**
 	 * Config the ENCJ chip's registers.
 	 */
-	void ENC28J60::InitConfig()
+	void ENC28J60::InitConfig(const uint8_t *mac)
 	{
 
 		// Config
@@ -204,14 +209,14 @@ namespace ENCJ_STELLARIS
 	 *  function.
 	 */
 	void ENC28J60::InitSPI
-		( uint8_t SSIbase
-		, uint8_t SSIperiph
-		, uint8_t SSIGPIOperiph
-		, uint8_t SSIGPIOport
-		, uint8_t SSIGPIOpins
-		, uint8_t SSICLK
-		, uint8_t SSIRX
-		, uint8_t SSITX
+		( uint32_t SSIbase
+		, uint32_t SSIperiph
+		, uint32_t SSIGPIOperiph
+		, uint32_t SSIGPIOport
+		, uint32_t SSIGPIOpins
+		, uint32_t SSICLK
+		, uint32_t SSIRX
+		, uint32_t SSITX
 		)
 	{
 		MAP_SysCtlPeripheralEnable(SSIGPIOperiph);
@@ -223,7 +228,7 @@ namespace ENCJ_STELLARIS
 		MAP_GPIOPinTypeSSI(SSIGPIOport, SSIGPIOpins);
 
 		MAP_SSIConfigSetExpClk
-			( SSIBase
+			( SSIbase
 			, MAP_SysCtlClockGet()
 			, SSI_FRF_MOTO_MODE_0
 			, SSI_MODE_MASTER
@@ -231,7 +236,7 @@ namespace ENCJ_STELLARIS
 			, 8
 			);
 
-		MAP_SSIEnable(SSIBase);
+		MAP_SSIEnable(SSIbase);
 		this->SSIbase = SSIbase;
 
 		// Make sure the SSI FIFO is empty?
@@ -246,15 +251,15 @@ namespace ENCJ_STELLARIS
 	 * later on, so those are stored for later use
 	 */
 	void ENC28J60::InitPort
-		( uint8_t CSport
-		, uint8_t CSpin
-		, uint8_t CSperiph
-		, uint8_t INTport
-		, uint8_t INTpin
-		, uint8_t INTperiph
-		, uint8_t RESETport
-		, uint8_t RESETpin
-		, uint8_t RESETperiph
+		( uint32_t CSport
+		, uint32_t CSpin
+		, uint32_t CSperiph
+		, uint32_t INTport
+		, uint32_t INTpin
+		, uint32_t INTperiph
+		, uint32_t RESETport
+		, uint32_t RESETpin
+		, uint32_t RESETperiph
 		)
 	{
 		// CSport/pin
@@ -276,7 +281,7 @@ namespace ENCJ_STELLARIS
 		this->RESETport = RESETport;
 
 		// Bring CS high
-		MAP_MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	/**
@@ -284,9 +289,9 @@ namespace ENCJ_STELLARIS
 	 *
 	 */
 	void ENC28J60::InitInterrupt
-		( uint8_t INTport
-		, uint8_t INTpin
-		, uint8_t INTassign
+		( uint32_t INTport
+		, uint32_t INTpin
+		, uint32_t INTassign
 		)
 	{
 		MAP_IntEnable(INTassign);
@@ -313,7 +318,7 @@ namespace ENCJ_STELLARIS
 		{
 			while (READ_REG(ENC_EPKTCNT) > 0)
 			{
-				this->Recieve();
+				this->Receive();
 			}
 		}
 	}
@@ -341,7 +346,7 @@ namespace ENCJ_STELLARIS
 		this->nextPacket = header[0] | (header[1] << 8);
 
 		// TODO: figure out what this does and comment as such
-		uint16_t dataCount = status[0] | (status[1] << 8);
+		uint16_t data_count = status[0] | (status[1] << 8);
 
 		if (status[2] & (1 << 7))
 		{
@@ -356,7 +361,7 @@ namespace ENCJ_STELLARIS
 				if (uip_len > 0)
 				{
 					uip_arp_out();
-					this->Send(uip_buf, upi_len);
+					this->Send(uip_buf, uip_len);
 					uip_len = 0;
 				}
 			}
@@ -371,7 +376,7 @@ namespace ENCJ_STELLARIS
 			}
 		}
 
-		uing16_t erxst = READ_REG(ENC_ERXSTL) | (READ_REG(ENC_ERXSTH) << 8);
+		uint16_t erxst = READ_REG(ENC_ERXSTL) | (READ_REG(ENC_ERXSTH) << 8);
 
 		// Mark packets as read
 		if (this->nextPacket == erxst)
@@ -463,16 +468,18 @@ namespace ENCJ_STELLARIS
 	 */
 	void ENC28J60::Reset()
 	{
-		MAP_GPIOPinWrite(this->resetPort, this->resetPin, 0);
+		MAP_GPIOPinWrite(this->RESETport, this->RESETpin, 0);
 
 		this->SPISend(0xFF);
 
-		MAP_GPIOPinWrite(this->resetPort, this->resetPin, this->resetPin);
+		MAP_GPIOPinWrite(this->RESETport, this->RESETpin, this->RESETpin);
 	}
 
 
 
-	// Send SPI request and read return value
+	/**
+	 * Send an SPI value and return the result
+	 */
 	uint8_t ENC28J60::SPISend(uint8_t msg)
 	{
 		unsigned long val;
@@ -486,11 +493,11 @@ namespace ENCJ_STELLARIS
 	// Read Control Register 
 	uint8_t ENC28J60::RCR(uint8_t reg)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(reg);
 		uint8_t b = SPISend(0xFF);
 
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 		return b;
 	}
 
@@ -502,11 +509,11 @@ namespace ENCJ_STELLARIS
 	 */
 	uint8_t ENC28J60::RCRM(uint8_t reg)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(reg);
 		this->SPISend(0xFF);
 		uint8_t b = this->SPISend(0xFF);
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 
 		return b;
 	}
@@ -514,36 +521,36 @@ namespace ENCJ_STELLARIS
 	// Write Control Register
 	void ENC28J60::WCR(uint8_t reg, uint8_t val)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(0x40 | reg);
 		this->SPISend(val);
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	// Read Buffer Memory
-	void ENC28J60::RBM(uint8_t *buf, uint8_t len)
+	void ENC28J60::RBM(uint8_t *buf, uint16_t len)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(0x20 | 0x1A);
 		for (int i = 0; i < len; ++i)
 		{
 			*buf = this->SPISend(0xFF);
 			++buf;
 		}
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	// Write Buffer Memory
-	void ENC28J60::WBM(const uint8_t *buf, uint8_t len)
+	void ENC28J60::WBM(const uint8_t *buf, uint16_t len)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(0x60 | 0x1A);
 		for (int i = 0; i < len; ++i)
 		{
-			this->SPISend(*buff);
+			this->SPISend(*buf);
 			++buf;
 		}
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	/**
@@ -553,19 +560,19 @@ namespace ENCJ_STELLARIS
 	 */
 	void ENC28J60::BFS(uint8_t reg, uint8_t mask)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(0x80 | reg);
 		this->SPISend(mask);
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 	// Bit Field Clear
 	void ENC28J60::BFC(uint8_t reg, uint8_t mask)
 	{
-		MAP_GPIOPinWrite(this->csPort, this->csPin, 0);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
 		this->SPISend(0xA0 | reg);
 		this->SPISend(mask);
-		MAP_GPIOPinWrite(this->csPort, this->csPin, this->csPin);
+		MAP_GPIOPinWrite(this->CSport, this->CSpin, this->CSpin);
 	}
 
 
@@ -653,11 +660,11 @@ namespace ENCJ_STELLARIS
 	{
 		/*Write the address of the PHY register to read from into the
 		MMIREGADR register. */
-		WRITE_REG(ENC_MIREGADR, addr);
+		WRITE_REG(ENC_MIREGADR, address);
 
 		/* Set the MICMD.MIIRD bit. The read operation begins and the
 		MISTAT.BUSY bit is set. */
-		WRITE_REG(ENCMICMD, 0x1);
+		WRITE_REG(ENC_MICMD, 0x1);
 
 		/* wait 10.24 μs. Poll the MISTAT.BUSY bit to be certain that the
 		operation is complete. While busy, the host controller should not
@@ -673,24 +680,24 @@ namespace ENCJ_STELLARIS
 		{
 			stat = READ_MREG(ENC_MISTAT);
 		}
-		while (stat & EMC_MISTAT_BUSY);
+		while (stat & ENC_MISTAT_BUSY);
 
 		/* Clear the MICMD.MIIRD bit. */
-		WRITE_REG(ENCMICMD, 0x00);
+		WRITE_REG(ENC_MICMD, 0x00);
 
 		/* Read the desired data from the MIRDL and MIRDH registers. The order
 		that these bytes are accessed is unimportant. */
 		uint16_t reg;
-		ret = READ_MREG(ENC_MIRDL) & 0xFF;
-		ret |= READ_MREG(ENC_MIRDH) << 8;
+		reg = READ_MREG(ENC_MIRDL) & 0xFF;
+		reg |= READ_MREG(ENC_MIRDH) << 8;
 
-		return ret;
+		return reg;
 	}
 
 	// PHY memory write 
 	void ENC28J60::WritePHY(uint8_t address, uint16_t value)
 	{
-		WRITE_REG(ENC_MIREGADR, addr);
+		WRITE_REG(ENC_MIREGADR, address);
 		WRITE_REG(ENC_MIWRL, value & 0xFF);
 		WRITE_REG(ENC_MIWRH, value >> 8);
 
@@ -722,23 +729,23 @@ namespace ENCJ_STELLARIS
 	// Set MAC address
 	void ENC28J60::SetMACAddress(const uint8_t *macAddr)
 	{
-		WRITE_REG(ENC_MAADR1, mac_addr[0]);
-		WRITE_REG(ENC_MAADR2, mac_addr[1]);
-		WRITE_REG(ENC_MAADR3, mac_addr[2]);
-		WRITE_REG(ENC_MAADR4, mac_addr[3]);
-		WRITE_REG(ENC_MAADR5, mac_addr[4]);
-		WRITE_REG(ENC_MAADR6, mac_addr[5]);
+		WRITE_REG(ENC_MAADR1, macAddr[0]);
+		WRITE_REG(ENC_MAADR2, macAddr[1]);
+		WRITE_REG(ENC_MAADR3, macAddr[2]);
+		WRITE_REG(ENC_MAADR4, macAddr[3]);
+		WRITE_REG(ENC_MAADR5, macAddr[4]);
+		WRITE_REG(ENC_MAADR6, macAddr[5]);
 	}
 
 	// Get MAC address
 	void ENC28J60::GetMACAddress(uint8_t *macAddr)
 	{
-		mac_addr[0] = READ_REG(ENC_MAADR1);
-		mac_addr[1] = READ_REG(ENC_MAADR2);
-		mac_addr[2] = READ_REG(ENC_MAADR3);
-		mac_addr[3] = READ_REG(ENC_MAADR4);
-		mac_addr[4] = READ_REG(ENC_MAADR5);
-		mac_addr[5] = READ_REG(ENC_MAADR6);
+		macAddr[0] = READ_REG(ENC_MAADR1);
+		macAddr[1] = READ_REG(ENC_MAADR2);
+		macAddr[2] = READ_REG(ENC_MAADR3);
+		macAddr[3] = READ_REG(ENC_MAADR4);
+		macAddr[4] = READ_REG(ENC_MAADR5);
+		macAddr[5] = READ_REG(ENC_MAADR6);
 	}
 
 

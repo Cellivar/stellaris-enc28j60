@@ -1,5 +1,5 @@
 /**
- * @file enc28j60.cpp
+ * @file enc28j60.h
  *
  * Prototype for ENC28J60 controller class. For use with the Stellaris
  * Launchpad, Stellaris-Pins library and a compatible ENC28J60 board.
@@ -33,24 +33,24 @@ namespace ENCJ_STELLARIS
 		 */
 		ENC28J60
 		( const uint8_t *mac					// MAC address array
-		, uint8_t CSport		= 0x40005000	// PORT B
-		, uint8_t CSpin			= 0x00000020	// PIN 5
-		, uint8_t CSperiph		= 0x20000002	// GPIO B
-		, uint8_t INTport		= 0x40024000	// PORT E
-		, uint8_t INTpin		= 0x00000010	// PIN 4
-		, uint8_t INTperiph		= 0x20000010	// GPIO E
-		, uint8_t INTassign		= 20			// INT_GPIOE
-		, uint8_t RESETport		= 0x40004000	// PORT A
-		, uint8_t RESETpin		= 0x00000004	// PIN 2
-		, uint8_t RESETperiph	= 0x20000001	// GPIO A
-		, uint8_t SSIbase		= 0x4000A000	// SSI2 Base
-		, uint8_t SSIperiph		= 0xf0001c02	// SSI2 Peripherial
-		, uint8_t SSIGPIOperiph	= 0x20000002	// PERIPH_GPIOB
-		, uint8_t SSIGPIOport	= 0x40005000	// GPIO_PORTB_BASE
-		, uint8_t SSIGPIOpins	= 0x00000104	// Pins 4 | 6 | 7
-		, uint8_t SSIclk		= 0x00011002	// GPIO_PB4_SSI2CLK
-		, uint8_t SSIrx			= 0x00011802	// GPIO_PB6_SSI2RX
-		, uint8_t SSItx			= 0x00011C02	// GPIO_PB7_SSI2TX
+		, uint32_t CSport		= 0x40005000	// PORT B
+		, uint32_t CSpin		= 0x00000020	// PIN 5
+		, uint32_t CSperiph		= 0x20000002	// GPIO B
+		, uint32_t INTport		= 0x40024000	// PORT E
+		, uint32_t INTpin		= 0x00000010	// PIN 4
+		, uint32_t INTperiph	= 0x20000010	// GPIO E
+		, uint32_t INTassign	= 20			// INT_GPIOE
+		, uint32_t RESETport	= 0x40004000	// PORT A
+		, uint32_t RESETpin		= 0x00000004	// PIN 2
+		, uint32_t RESETperiph	= 0x20000001	// GPIO A
+		, uint32_t SSIbase		= 0x4000A000	// SSI2 Base
+		, uint32_t SSIperiph	= 0xf0001c02	// SSI2 Peripherial
+		, uint32_t SSIGPIOperiph= 0x20000002	// PERIPH_GPIOB
+		, uint32_t SSIGPIOport	= 0x40005000	// GPIO_PORTB_BASE
+		, uint32_t SSIGPIOpins	= 0x00000104	// Pins 4 | 6 | 7
+		, uint32_t SSIclk		= 0x00011002	// GPIO_PB4_SSI2CLK
+		, uint32_t SSIrx		= 0x00011802	// GPIO_PB6_SSI2RX
+		, uint32_t SSItx		= 0x00011C02	// GPIO_PB7_SSI2TX
 		);
 
 #ifdef STELLARIS_PINS_SSIPIN_CHAPMAN_H && STELLARIS_PINS_DIGITALIOPIN_CHAPMAN_H
@@ -65,50 +65,51 @@ namespace ENCJ_STELLARIS
 			); // Stellaris pins enabled constructor
 #endif
 
-		void Receive();
+		void Receive(void);
 		bool Send(const uint8_t *buf, uint16_t count);
-		void Reset();
+		void Reset(void);
+		void Interrupt(void);
 
 		uint8_t SPISend(uint8_t msg);
 
 	private:
 		/* Setup */
 		void InitSPI
-			( uint8_t SSIbase
-			, uint8_t SSIperiph
-			, uint8_t SSIGPIOperiph
-			, uint8_t SSIGPIOport
-			, uint8_t SSIGPIOpins
-			, uint8_t SSICLK
-			, uint8_t SSIRX
-			, uint8_t SSITX
+			( uint32_t SSIbase
+			, uint32_t SSIperiph
+			, uint32_t SSIGPIOperiph
+			, uint32_t SSIGPIOport
+			, uint32_t SSIGPIOpins
+			, uint32_t SSICLK
+			, uint32_t SSIRX
+			, uint32_t SSITX
 			);
 
 		void InitPort
-			( uint8_t CSport
-			, uint8_t CSpin
-			, uint8_t CSperiph
-			, uint8_t INTport
-			, uint8_t INTpin
-			, uint8_t INTperiph
-			, uint8_t RESETport
-			, uint8_t RESETpin
-			, uint8_t RESETperiph
+			( uint32_t CSport
+			, uint32_t CSpin
+			, uint32_t CSperiph
+			, uint32_t INTport
+			, uint32_t INTpin
+			, uint32_t INTperiph
+			, uint32_t RESETport
+			, uint32_t RESETpin
+			, uint32_t RESETperiph
 			);
 
-		void InitConfig();
+		void InitConfig(const uint8_t *mac);
 
 		void InitInterrupt
-			( uint8_t INTport
-			, uint8_t INTpin
-			, uint8_t INTassign
+			( uint32_t INTport
+			, uint32_t INTpin
+			, uint32_t INTassign
 			);
 
 
 		/* Pin bank */
-		uint8_t csPort, intPort, resetPort;
-		uint8_t csPin, intPin, resetPin;
-		uint8_t SSIBase;
+		uint32_t CSport, INTport, RESETport;
+		uint32_t CSpin, INTpin, RESETpin;
+		uint32_t SSIbase;
 
 		static uint8_t activeBank;		// Current memory bank
 		static uint16_t nextPacket;	// Next data packet (?)
@@ -145,7 +146,7 @@ namespace ENCJ_STELLARIS
 		void SetRXMemoryArea(uint16_t startAddr, uint16_t endAddr);
 		void SetMACAddress(const uint8_t *macAddr);
 		void GetMACAddress(uint8_t *macAddr);
-	}
+	};
 
 
 } // Namespace ENCJ_STELLARIS
