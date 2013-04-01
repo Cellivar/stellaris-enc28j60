@@ -455,7 +455,7 @@ bool parse_path(char *path, struct header_pin **connector, uint8_t *pin,
 		printf("Pin: %s\n", buf);
 
 		l = i+1;
-		*pin = atoi(buf)-1; //(buf[0] - '0')-1;
+		*pin = (buf[0] - '0')-1;
 		if( l == '\0' ) {
 			return false;
 		}

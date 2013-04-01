@@ -123,7 +123,7 @@ struct psock {
   unsigned char state;   /* The state of the protosocket. */
 };
 
-void psock_init(struct psock *psock, char *buffer, unsigned int buffersize);
+void psock_init(struct psock *psock, u8_t *buffer, u16_t buffersize);
 /**
  * Initialize a protosocket.
  *
@@ -157,7 +157,7 @@ void psock_init(struct psock *psock, char *buffer, unsigned int buffersize);
  */
 #define PSOCK_BEGIN(psock) PT_BEGIN(&((psock)->pt))
 
-PT_THREAD(psock_send(struct psock *psock, const char *buf, unsigned int len));
+PT_THREAD(psock_send(struct psock *psock, const u8_t *buf, unsigned int len));
 /**
  * Send data.
  *

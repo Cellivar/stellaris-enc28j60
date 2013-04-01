@@ -257,7 +257,7 @@ void SysTickIntHandler(void)
 	//g_ulFlags |= FLAG_SYSTICK;
 }
 
-
+// Handle interrupts from the INT pin
 void GPIOPortEIntHandler(void) {
 	uint8_t p = MAP_GPIOPinIntStatus(GPIO_PORTE_BASE, true) & 0xFF;
 
@@ -266,7 +266,7 @@ void GPIOPortEIntHandler(void) {
 	HWREGBITW(&g_ulFlags, FLAG_ENC_INT) = 1;
 }
 
-// Not referenced anywhere? 
+// Used in uip_timer.c
 clock_time_t clock_time(void)
 {
 	return((clock_time_t)g_ulTickCounter);

@@ -1,7 +1,6 @@
-﻿// derp
 /**
  * @file enc28j60.cpp
- * 
+ *
  * Definitions for the ENC28J60 class
  */
 
@@ -29,7 +28,7 @@
 
 namespace ENCJ_STELLARIS
 {
-	
+
 	ENC28J60::ENC28J60
 		( const uint8_t *mac
 		, uint32_t CSport
@@ -124,7 +123,7 @@ namespace ENCJ_STELLARIS
 		CLEAR_REG_BITS(ENC_ECON1, ENC_ECON1_RXEN);
 
 		// Enable automatic buffer pointer increment
-		SET_REG_BITS(ENC_ECON2, ENC_ECON2_AUTOINC);	
+		SET_REG_BITS(ENC_ECON2, ENC_ECON2_AUTOINC);
 
 		this->SetRXMemoryArea(0x000, RX_END);
 
@@ -151,12 +150,12 @@ namespace ENCJ_STELLARIS
 		// Allow broadcasts, multicast, unicast, and invalid CRCs are dumped
 		WRITE_REG
 			( ENC_ERXFCON
-			, ENC_ERXFCON_UCEN 
-				| ENC_ERXFCON_CRCEN 
-				| ENC_ERXFCON_BCEN 
+			, ENC_ERXFCON_UCEN
+				| ENC_ERXFCON_CRCEN
+				| ENC_ERXFCON_BCEN
 				| ENC_ERXFCON_MCEN
 			);
-	
+
 		// Allow MAC to use TX/RX pause frames, enable MAC packet receive.
 		WRITE_REG
 			( ENC_MACON1
@@ -181,7 +180,7 @@ namespace ENCJ_STELLARIS
 		WRITE_REG(ENC_MABBIPG, 0x12);	// Back-to-back packet gap
 		WRITE_REG(ENC_MAIPGL, 0x12);	// Non-btb inter-packet gap low
 		WRITE_REG(ENC_MAIPGH, 0x0C);	// Non-btb inter-packet gap high
-		
+
 		// Enable interrupts, and enable packet recieve pending
 		SET_REG_BITS(ENC_EIE, ENC_EIE_INTIE | ENC_EIE_PKTIE);
 
@@ -326,7 +325,7 @@ namespace ENCJ_STELLARIS
 	/**
 	 * Recieve a single packet. Contents will be placed in uip_buf, and uIP is
 	 * called as appropriate
-	 * 
+	 *
 	 * @todo: Decouple this from uIP, the IP stack should be elsewhere.
 	 * Possibly have this return a struct with the appropriate data? Difficult
 	 * as it needs to actively read the information
@@ -353,7 +352,7 @@ namespace ENCJ_STELLARIS
 			uip_len = data_count;
 			this->RBM(uip_buf, data_count);
 
-			if (BUF->type == htons(UIP_ETHTYPE_IP)) 
+			if (BUF->type == htons(UIP_ETHTYPE_IP))
 			{
 				uip_arp_ipin();
 				uip_input();
@@ -447,7 +446,7 @@ namespace ENCJ_STELLARIS
 		this->RBM(status, 7);
 
 		uint16_t transmit_count = status[0] | (status[1] << 8);
-		
+
 		bool retStatus = false;
 		if (status[2] & 0x80)
 		{
@@ -488,9 +487,9 @@ namespace ENCJ_STELLARIS
 		return (uint8_t)val;
 	}
 
-	
 
-	// Read Control Register 
+
+	// Read Control Register
 	uint8_t ENC28J60::RCR(uint8_t reg)
 	{
 		MAP_GPIOPinWrite(this->CSport, this->CSpin, 0);
@@ -603,7 +602,7 @@ namespace ENCJ_STELLARIS
 		return this->RCR(reg);
 	}
 
-	// Read a MII register's contents 
+	// Read a MII register's contents
 	uint8_t ENC28J60::ReadMIIRegister(uint8_t reg, uint8_t bank)
 	{
 		if (bank != this->activeBank)
@@ -614,7 +613,7 @@ namespace ENCJ_STELLARIS
 		return this->RCRM(reg);
 	}
 
-	// Write to a register 
+	// Write to a register
 	void ENC28J60::WriteRegister(uint8_t reg, uint8_t bank, uint8_t value)
 	{
 		if (bank != this->activeBank)
@@ -627,7 +626,7 @@ namespace ENCJ_STELLARIS
 
 
 
-	// Batch bit field set 
+	// Batch bit field set
 	void ENC28J60::BitsFieldSet(uint8_t reg, uint8_t bank, uint8_t mask)
 	{
 		if (bank != this->activeBank)
@@ -650,7 +649,7 @@ namespace ENCJ_STELLARIS
 	}
 
 
-	
+
 	/**
 	* Read value from PHY address.
 	* Reading procedure is described in ENC28J60 datasheet
@@ -666,7 +665,7 @@ namespace ENCJ_STELLARIS
 		MISTAT.BUSY bit is set. */
 		WRITE_REG(ENC_MICMD, 0x1);
 
-		/* wait 10.24 μs. Poll the MISTAT.BUSY bit to be certain that the
+		/* wait 10.24 us. Poll the MISTAT.BUSY bit to be certain that the
 		operation is complete. While busy, the host controller should not
 		start any MIISCAN operations or write to the MIWRH register.
 
@@ -694,7 +693,7 @@ namespace ENCJ_STELLARIS
 		return reg;
 	}
 
-	// PHY memory write 
+	// PHY memory write
 	void ENC28J60::WritePHY(uint8_t address, uint16_t value)
 	{
 		WRITE_REG(ENC_MIREGADR, address);
