@@ -445,7 +445,7 @@ namespace ENCJ_STELLARIS
 		WRITE_REG(ENC_ERDPTH, txEnd >> 8);
 		this->RBM(status, 7);
 
-		uint16_t transmit_count = status[0] | (status[1] << 8);
+		//uint16_t transmit_count = status[0] | (status[1] << 8);
 
 		bool retStatus = false;
 		if (status[2] & 0x80)

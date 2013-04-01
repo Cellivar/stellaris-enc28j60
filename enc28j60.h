@@ -52,8 +52,8 @@ namespace ENCJ_STELLARIS
 		, uint32_t SSIrx		= 0x00011802	// GPIO_PB6_SSI2RX
 		, uint32_t SSItx		= 0x00011C02	// GPIO_PB7_SSI2TX
 		);
-
-#ifdef STELLARIS_PINS_SSIPIN_CHAPMAN_H && STELLARIS_PINS_DIGITALIOPIN_CHAPMAN_H
+#ifdef STELLARIS_PINS_SSIPIN_CHAPMAN_H
+#ifdef STELLARIS_PINS_DIGITALIOPIN_CHAPMAN_H
 		// TODO: Add in support for Pin Library
 		/**
 		 * Secondary constructor, allows use of StellarisPins library objects
@@ -63,6 +63,7 @@ namespace ENCJ_STELLARIS
 		ENC28J60
 			( const uint8_t *mac
 			); // Stellaris pins enabled constructor
+#endif
 #endif
 
 		void Receive(void);

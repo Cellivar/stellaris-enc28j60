@@ -26,7 +26,7 @@ static const uint8_t http_404_header[] =
 
 static const uint8_t unknown_request[] = "Unknown request";
 
-static const uint8_t read_result[] = "Read:";
+//static const uint8_t read_result[] = "Read:";
 
 
 #define CONFIG_NOT_USED		0
@@ -255,7 +255,7 @@ config_done:
 				static char b2[] = "\t\"J2\": [";
 				static char b3[] = "\t\"J3\": [";
 				static char b4[] = "\t\"J4\": [";
-				static char bnone[] = "\"x\"";
+				//static char bnone[] = "\"x\"";
 				static char bx[] = "\n}";
 
 				memcpy(buf+i, b1, sizeof(b1)-1);
