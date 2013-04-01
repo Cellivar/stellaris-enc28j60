@@ -15,6 +15,8 @@
 #include "common.h"
 #include "enc28j60reg.h"
 
+//#include "enc28j60.cpp"
+
 
 namespace ENCJ_STELLARIS
 {
@@ -32,26 +34,28 @@ namespace ENCJ_STELLARIS
 		 * Blank arguments default to XPG's boosterpack pinout.
 		 */
 		ENC28J60
-		( const uint8_t *mac					// MAC address array
-		, uint32_t CSport		= 0x40005000	// PORT B
-		, uint32_t CSpin		= 0x00000020	// PIN 5
-		, uint32_t CSperiph		= 0x20000002	// GPIO B
-		, uint32_t INTport		= 0x40024000	// PORT E
-		, uint32_t INTpin		= 0x00000010	// PIN 4
-		, uint32_t INTperiph	= 0x20000010	// GPIO E
-		, uint32_t INTassign	= 20			// INT_GPIOE
-		, uint32_t RESETport	= 0x40004000	// PORT A
-		, uint32_t RESETpin		= 0x00000004	// PIN 2
-		, uint32_t RESETperiph	= 0x20000001	// GPIO A
-		, uint32_t SSIbase		= 0x4000A000	// SSI2 Base
-		, uint32_t SSIperiph	= 0xf0001c02	// SSI2 Peripherial
-		, uint32_t SSIGPIOperiph= 0x20000002	// PERIPH_GPIOB
-		, uint32_t SSIGPIOport	= 0x40005000	// GPIO_PORTB_BASE
-		, uint32_t SSIGPIOpins	= 0x00000104	// Pins 4 | 6 | 7
-		, uint32_t SSIclk		= 0x00011002	// GPIO_PB4_SSI2CLK
-		, uint32_t SSIrx		= 0x00011802	// GPIO_PB6_SSI2RX
-		, uint32_t SSItx		= 0x00011C02	// GPIO_PB7_SSI2TX
-		);
+			( const uint8_t *mac					// MAC address array
+			, uint32_t CSport		= 0x40005000	// PORT B
+			, uint32_t CSpin		= 0x00000020	// PIN 5
+			, uint32_t CSperiph		= 0x20000002	// GPIO B
+			, uint32_t INTport		= 0x40024000	// PORT E
+			, uint32_t INTpin		= 0x00000010	// PIN 4
+			, uint32_t INTperiph	= 0x20000010	// GPIO E
+			, uint32_t INTassign	= 20			// INT_GPIOE
+			, uint32_t RESETport	= 0x40004000	// PORT A
+			, uint32_t RESETpin		= 0x00000004	// PIN 2
+			, uint32_t RESETperiph	= 0x20000001	// GPIO A
+			, uint32_t SSIbase		= 0x4000A000	// SSI2 Base
+			, uint32_t SSIperiph	= 0xf0001c02	// SSI2 Peripherial
+			, uint32_t SSIGPIOperiph= 0x20000002	// PERIPH_GPIOB
+			, uint32_t SSIGPIOport	= 0x40005000	// GPIO_PORTB_BASE
+			, uint32_t SSIGPIOpins	= 0x00000104	// Pins 4 | 6 | 7
+			, uint32_t SSIclk		= 0x00011002	// GPIO_PB4_SSI2CLK
+			, uint32_t SSIrx		= 0x00011802	// GPIO_PB6_SSI2RX
+			, uint32_t SSItx		= 0x00011C02	// GPIO_PB7_SSI2TX
+			);
+
+
 #ifdef STELLARIS_PINS_SSIPIN_CHAPMAN_H
 #ifdef STELLARIS_PINS_DIGITALIOPIN_CHAPMAN_H
 		// TODO: Add in support for Pin Library
@@ -112,8 +116,8 @@ namespace ENCJ_STELLARIS
 		uint32_t CSpin, INTpin, RESETpin;
 		uint32_t SSIbase;
 
-		static uint8_t activeBank;		// Current memory bank
-		static uint16_t nextPacket;	// Next data packet (?)
+		uint8_t activeBank;		// Current memory bank
+		uint16_t nextPacket;	// Next data packet (?)
 
 		/* Low level register controls */
 
