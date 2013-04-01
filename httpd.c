@@ -7,26 +7,26 @@
 
 #include "files_data.h"
 
-static const char http_response_header[] =
+static const uint8_t http_response_header[] =
 	"HTTP/1.1 200 OK\r\n"
 	"Server: net430\r\n"
 	"Access-Control-Allow-Origin: *\r\n"
 	"Content-Type: text/html\r\n\r\n";
 
-static const char http_json_header[] =
+static const uint8_t http_json_header[] =
 	"HTTP/1.1 200 OK\r\n"
 	"Server: net430\r\n"
 	"Access-Control-Allow-Origin: *\r\n"
 	"Content-Type: application/json\r\n\r\n";
 
-static const char http_404_header[] =
+static const uint8_t http_404_header[] =
 	"HTTP/1.1 404 OK\r\n"
 	"Server: net430\r\n"
 	"Content-Type: text/html\r\n\r\n";
 
-static const char unknown_request[] = "Unknown request";
+static const uint8_t unknown_request[] = "Unknown request";
 
-static const char read_result[] = "Read:";
+static const uint8_t read_result[] = "Read:";
 
 
 #define CONFIG_NOT_USED		0
@@ -142,7 +142,7 @@ void httpd_appcall(void) {
 		hs->done = false;
 	} else if(uip_newdata()) {
 		printf("New data\n");
-		if(strncmp(DATA_BUF, "GET ", 4) != 0) {
+		if(strncmp((char*)DATA_BUF, "GET ", 4) != 0) {
 			uip_abort();
 			return;
 		}

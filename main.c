@@ -162,21 +162,6 @@ int main(void) {
 #endif
 
 
-
-
-
-
-
-	// TODO
-
-
-
-
-
-
-
-
-
 	long lPeriodicTimer, lARPTimer;
 	lPeriodicTimer = lARPTimer = 0;
 
@@ -191,20 +176,27 @@ int main(void) {
 		i = MAP_GPIOPinRead(GPIO_PORTA_BASE, ENC_INT) & ENC_INT;
 		}*/
 
+		// Check the interrupt status for our INT pin, act if it is set.
 		if( HWREGBITW(&g_ulFlags, FLAG_ENC_INT) == 1 ) {
 			HWREGBITW(&g_ulFlags, FLAG_ENC_INT) = 0;
-			enc_action();
+			chip.Interrupt();
 		}
 
+		// Count along with the system tick.
 		if( HWREGBITW(&g_ulFlags, FLAG_SYSTICK) == 1) {
 			HWREGBITW(&g_ulFlags, FLAG_SYSTICK) = 0;
 			lPeriodicTimer += SYSTICKMS;
 			lARPTimer += SYSTICKMS;
+#ifdef _DEBUG
 			printf("%d %d\n", lPeriodicTimer, lARPTimer);
+#endif
 		}
+
 
 		if( lPeriodicTimer > UIP_PERIODIC_TIMER_MS ) {
 			lPeriodicTimer = 0;
+
+
 			int l;
 			for(l = 0; l < UIP_CONNS; l++) {
 				uip_periodic(l);
@@ -216,7 +208,7 @@ int main(void) {
 				//
 				if(uip_len > 0) {
 					uip_arp_out();
-					enc_send_packet(uip_buf, uip_len);
+					chip.Send(uip_buf, uip_len);
 					uip_len = 0;
 				}
 			}
@@ -225,7 +217,7 @@ int main(void) {
 				uip_udp_periodic(l);
 				if( uip_len > 0) {
 					uip_arp_out();
-					enc_send_packet(uip_buf, uip_len);
+					chip.Send(uip_buf, uip_len);
 					uip_len = 0;
 				}
 			}
